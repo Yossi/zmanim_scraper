@@ -2,7 +2,8 @@ name: yearly-scrape
 
 on:
   schedule:
-    - cron: "0 0 1 1 *" #runs at 00:00 UTC on newyears
+    - cron: "0 0 1 1 *" # runs at 00:00 UTC on newyears
+  repository_dispatch
 
 jobs:
   scrape:
@@ -14,7 +15,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.10 #install the python needed
+          python-version: 3.10 # install the python needed
       - name: execute py script # run yeartimes.py to get the latest data
         run: |
           python yeartimes.py
@@ -22,5 +23,6 @@ jobs:
         run: |
           git config --global user.name 'Yossi'
           git config --global user.email 'yossi@users.noreply.github.com'
+          git add .
           git commit -am "Automated report"
           git push
