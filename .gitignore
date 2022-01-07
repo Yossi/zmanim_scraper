@@ -125,3 +125,4 @@ dmypy.json
 
 # custom
 output/
+*_zmanim_(*.csv
