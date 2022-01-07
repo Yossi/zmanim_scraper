@@ -1,7 +1,8 @@
-import datetime
-import feedparser
-from pprint import pprint
 import csv
+import datetime
+
+import feedparser
+
 
 def chabad_org(zipcode, date):
     feed = 'http://www.chabad.org/tools/rss/zmanim.xml?z=%s&tDate=%s' % (zipcode, date)
@@ -58,7 +59,9 @@ def main(zipcode, start, end):
 
         for date in dates:
             print(date.strftime('%m/%d/%Y'), zipcode)
-            times = chabad_org(zipcode, date.strftime('%m/%d/%Y'))
+            times = {}
+            while not times:
+                times = chabad_org(zipcode, date.strftime('%m/%d/%Y'))
             times['date'] = date
 
             errata = {
