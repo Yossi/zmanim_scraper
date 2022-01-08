@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "0 0 1 1 *" # runs at 00:00 UTC on newyears
   repository_dispatch:
+    types: [scrape]
 
 jobs:
   scrape:
