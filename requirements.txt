@@ -1,1 +1,8 @@
-feedparser==6.0.8
+feedparser
+
+dateparser
+holidays
+timezonefinder
+uszipcode
+python-Levenshtein
+pyluach
