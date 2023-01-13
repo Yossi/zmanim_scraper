@@ -10,7 +10,7 @@ def chabad_org(zipcode, date):
     return {entry['title'].split('-')[0]:entry['title'].split('-')[1] for entry in info.entries}
 
 def main(zipcode, start, end):
-    filename = f'{zipcode}_zmanim_{start}_to_{end}.csv'
+    filename = f'zmanim_data/{zipcode}_zmanim_{start}_to_{end}.csv'
     with open(filename, 'w') as csvfile:
         fieldnames = [
             'date',

@@ -18,7 +18,7 @@ jobs:
           python-version: 3.x # install the python needed
       - name: pip install requirements
         run: |
-          pip install -r requirements.txt
+          pip install feedparser
       - name: run python yeartimes.py
         run: |
           python yeartimes.py
