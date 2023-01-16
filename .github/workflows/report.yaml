@@ -15,7 +15,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.x # install the latest python
+          python-version: 3.x # install python
       - name: pip install requirements
         run: |
           pip install -r requirements.txt --use-pep517
