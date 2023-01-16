@@ -11,11 +11,11 @@ jobs:
 
     steps:
       - name: checkout repo content
-        uses: actions/checkout@v2 # checkout the repository content to github runner.
+        uses: actions/checkout # checkout the repository content to github runner.
       - name: setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python
         with:
-          python-version: 3.x # install the python needed
+          python-version: 3.x # install the latest python
       - name: pip install requirements
         run: |
           pip install feedparser
