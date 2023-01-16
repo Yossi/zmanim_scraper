@@ -335,7 +335,7 @@ if __name__ == '__main__':
     zipcodes = [94303, 16504]
     for zipcode in zipcodes:
         start =  datetime(year,1,1)
-        end = datetime(year,12,31)
+        end = datetime(year,1,3)
         filename = f'davening_times/{zipcode}_davening_times_{start.date()}_to_{end.date()}.csv'
 
         r = Report()
