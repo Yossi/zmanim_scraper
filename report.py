@@ -7,7 +7,8 @@ from zoneinfo import ZoneInfo
 import dateparser
 import feedparser
 from holidays.countries import US
-from holidays.constants import FEB, JAN, JUL, NOV
+from holidays.constants import FEB, NOV
+from holidays.observed_holiday_base import SAT_SUN_TO_NEXT_MON
 from dateutil.relativedelta import MO, TH
 from dateutil.relativedelta import relativedelta as rd
 from pyluach import dates
@@ -27,9 +28,9 @@ class ChabadCivilHolidays(US):
         self.pop_named('Veterans')
         self.pop_named('Chr')
 
-        self._add_with_observed(date(year, JAN, 1), "New Year's Day", before=False) # stricly no backtracks to fridays
+        self._add_observed(self._add_new_years_day("New Year's Day"), rule=SAT_SUN_TO_NEXT_MON)
         self[date(year, FEB, 1) + rd(weekday=MO(+3))] = "Presidents' Day"
-        self._add_with_observed(date(year, JUL, 4), 'Independence Day', before=False)
+        self._add_observed(self._add_holiday_jul_4("Independence Day"), rule=SAT_SUN_TO_NEXT_MON)
         self[date(year, NOV, 1) + rd(weekday=TH(+4)) + rd(days=+1)] = 'Black Friday'
         self[date(year, 12, 25)] = 'Nittel'
 
