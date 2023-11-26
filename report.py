@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import dateparser
 import feedparser
-import holidays
+from holidays.countries import US
 from holidays.constants import FEB, JAN, JUL, NOV
 from dateutil.relativedelta import MO, TH
 from dateutil.relativedelta import relativedelta as rd
@@ -16,7 +16,7 @@ from uszipcode import SearchEngine
 
 
 
-class ChabadCivilHolidays(holidays.US):
+class ChabadCivilHolidays(US):
     def _populate(self, year):
         super()._populate(year)
         self.pop_named('New Year')

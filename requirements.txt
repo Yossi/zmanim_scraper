@@ -1,7 +1,7 @@
 feedparser
 
 dateparser
-holidays==0.24
+holidays==0.27.1
 timezonefinder
 uszipcode
 python-Levenshtein
