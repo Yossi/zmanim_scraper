@@ -40,7 +40,7 @@ civil_holidays = ChabadCivilHolidays()
 
 class Day:
     dow = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
-    major_holidays = ('Pesach', 'Shavuos', 'Yom Kippur', 'Succos', 'Shmini Atzeres', 'Simchas Torah') # Days when shachris is at 10am. rosh hashana intentionally left out.
+    major_holidays = ('Pesach', 'Shavuos', 'Succos', 'Shmini Atzeres', 'Simchas Torah') # Days when shachris is at 10am. Rosh Hashana and Yom Kippur intentionally left out.
 
 
     def __init__(self, row: dict):
@@ -62,7 +62,8 @@ class Day:
 
         self.shema: str = dateparser.parse(row['Latest Shema ']).time().strftime("%-I:%M %p")
 
-        self.mincha: str = self.get_mincha()
+        self.mincha: str = self.get_fri_mincha()
+        self.mincha_observed = ''#self.mincha
 
         self.maariv: str = self.get_maariv()
 
@@ -78,6 +79,7 @@ class Day:
             self.shachris,
             self.shema,
             self.mincha,
+            self.mincha_observed,
             self.maariv,
             self.candles,
             self.end,
@@ -92,7 +94,7 @@ class Day:
             'heb_date': f'{self.heb_date:%-d %B}',
             'shachris': self.shachris,
             'shema': self.shema,
-            'mincha': self.mincha,
+            'mincha': self.mincha_observed,
             'maariv': self.maariv,
             'candles': self.candles,
             'ending': self.end,
@@ -100,14 +102,14 @@ class Day:
 
 
     def get_shachris(self) -> str:
-        shachris = time(hour=6, minute=45)
+        shachris = time(hour=7, minute=45)
         if self.is_chol_hamoed():
             shachris = time(hour=7, minute=30)
         if self.weekday == 'Sun' or civil_holidays.get(self.date):
-            shachris = time(hour=8, minute=00) # sunday, or sunday-style
+            shachris = time(hour=8, minute=30) # sunday, or sunday-style
         if self.weekday == 'Sat' or self.heb_holiday in self.major_holidays:
             shachris = time(hour=10, minute=00) # shabbos / yom tov
-        if self.heb_holiday == 'Rosh Hashana':
+        if self.heb_holiday in ('Rosh Hashana', 'Yom Kippur'):
             shachris = time(hour=9, minute=00)
         return shachris.strftime("%-I:%M %p")
 
@@ -121,12 +123,7 @@ class Day:
         return reason
 
 
-    def get_mincha(self) -> str:
-        if self.heb_date == dates.HebrewDate(self.heb_date.year, 7, 9): # Erev Yom Kippur
-            return time(hour=15, minute=00).strftime("%-I:%M %p")
-        if self.heb_date == dates.HebrewDate(self.heb_date.year, 7, 10): # Yom Kippur
-            return 'after the break'
-
+    def get_fri_mincha(self) -> str:
         if self.weekday == 'Fri': # 10 minutes after candle lighting rounded to the nearest 5 minutes, but no later than 11 minutes after candle lighting
             candle_time = dateparser.parse(self.get_candle_lighting())
             mincha = candle_time + timedelta(minutes=10) - timedelta(minutes=candle_time.minute % 5)
@@ -192,6 +189,24 @@ class Day:
         return timedelta(microseconds=0)
 
 
+    def yom_kippur_adjust(self) -> str:
+        if self.heb_date == dates.HebrewDate(self.heb_date.year, 7, 9): # Erev Yom Kippur  ## Note: this stuff has to be done after the rest of the week is computed. See Report.process()
+            return time(hour=15, minute=00).strftime("%-I:%M %p")
+        if self.heb_date == dates.HebrewDate(self.heb_date.year, 7, 10): # Yom Kippur
+            return 'after the break'
+        return self.mincha_observed
+
+
+    def early_fri_mincha_adjust(self) -> str:
+        if self.weekday == 'Fri':
+            if (self.heb_date.month == 1 and self.heb_date.day > 22) or 1 < self.heb_date.month < 7:
+                actual_mincha = dateparser.parse(self.mincha)
+                if actual_mincha.time() > time(hour=19, minute=30):
+                    plag_less_15 = dateparser.parse(self.row['Plag Hamincha (“Half of Mincha”) ']) - timedelta(minutes=15)
+                    return (plag_less_15 + timedelta(minutes=4-((plag_less_15.minute-1) % 5))).time().strftime("%-I:%M %p")
+        return self.mincha
+
+
     def get_candle_lighting(self) -> str:
         lighting = self.row['Candle Lighting ']
         if not lighting:
@@ -239,23 +254,33 @@ class Report:
                 this_friday_mincha = dateparser.parse(day.mincha).time()
                 earliest_friday_mincha = min(last_friday_mincha, this_friday_mincha) # earliest friday mincha
                 for day_ in self.days[-5:]: # fill in the rest of the week, skipping any that are already set
-                    if not day_.mincha and (day_.DST or day_.weekday == 'Sun' or civil_holidays.get(day_.date)): # all DST and any sunday like days
+                    if (day_.DST or day_.weekday == 'Sun' or civil_holidays.get(day_.date)): # all DST and any sunday like days  ## not day_.mincha and
                         computed_mincha = datetime.combine(day_.date, earliest_friday_mincha) - day_.fast_adjust() # adjustments for fast days
                         day_.mincha = computed_mincha.time().strftime("%-I:%M %p")
+                        day_.mincha_observed = day_.mincha
                         day_.maariv = 'after Mincha'
-
+                    # do yom kippur related things here
+                    day_.mincha_observed = day_.yom_kippur_adjust()
+            # do early friday mincha stuff here
+            day.mincha_observed = day.early_fri_mincha_adjust()
+            # do erev yom kippur thing here again in case it's a friday
+            day.mincha_observed = day.yom_kippur_adjust()
+            
         if day.weekday == 'Sat' and self.have_friday: # 15 minutes before Friday candle lighting rounded to the nearest 5 minutes
             candle_lighting_less_15: datetime = dateparser.parse(self.days[-1].get_candle_lighting()) - timedelta(minutes=15)
             mincha = candle_lighting_less_15 - timedelta(minutes=candle_lighting_less_15.minute % 5)
             if (candle_lighting_less_15 - mincha).total_seconds() > 2.5 * 60:
                 mincha += timedelta(minutes=5)
-            day.mincha = mincha.time().strftime("%-I:%M %p")
+            day.mincha_observed = mincha.time().strftime("%-I:%M %p")
+            # do yom kippur thing here again in case it's a shabbos
+            day.mincha_observed = day.yom_kippur_adjust()
 
         self.days.append(day)
 
 
     def load_csv(self, filename) -> None:
         ''' for loading .csv files made by yeartimes.py '''
+        # not currently in use. scrapes fresh every time
         timezone = self.zip_to_tz(filename[:5])
 
         with open(filename) as csvfile:
@@ -328,7 +353,7 @@ class Report:
 
 
 
-if __name__ == '__main__':
+def main():
     today = date.today()
     year = today.year
     if today.month > 6:
@@ -342,3 +367,24 @@ if __name__ == '__main__':
         r = Report()
         r.load(zipcode, start, end)
         r.save(filename)
+
+
+def debug():
+        zipcode = '94303'
+
+        start =  datetime(2024,8,23)
+        end = datetime(2024,9,6)
+
+        # start =  datetime(2024,3,6)
+        # end = datetime(2024,3,11)
+
+        filename = f'debug/{zipcode}_davening_times_{start.date()}_to_{end.date()}.csv'
+
+        r = Report()
+        r.load(zipcode, start, end)
+        r.save(filename)
+
+
+if __name__ == '__main__':
+    main()
+    # debug()
