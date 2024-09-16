@@ -106,7 +106,7 @@ class Day:
         if self.is_chol_hamoed():
             shachris = time(hour=7, minute=30)
         if self.weekday == 'Sun' or civil_holidays.get(self.date):
-            shachris = time(hour=8, minute=30) # sunday, or sunday-style
+            shachris = time(hour=7, minute=45) # sunday, or sunday-style (changed to same as weekday)
         if self.weekday == 'Sat' or self.heb_holiday in self.major_holidays:
             shachris = time(hour=10, minute=00) # shabbos / yom tov
         if self.heb_holiday in ('Rosh Hashana', 'Yom Kippur'):
