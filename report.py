@@ -104,7 +104,7 @@ class Day:
     def get_shachris(self) -> str:
         shachris = time(hour=7, minute=45)
         if self.is_chol_hamoed():
-            shachris = time(hour=7, minute=30)
+            shachris = time(hour=7, minute=45)
         if self.weekday == 'Sun' or civil_holidays.get(self.date):
             shachris = time(hour=7, minute=45) # sunday, or sunday-style (changed to same as weekday)
         if self.weekday == 'Sat' or self.heb_holiday in self.major_holidays:
