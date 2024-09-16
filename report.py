@@ -358,7 +358,7 @@ def main():
     year = today.year
     if today.month > 6:
         year += 1
-    zipcodes = [94303, 16504]
+    zipcodes = [94303]#, 16504
     for zipcode in zipcodes:
         start =  datetime(year,1,1)
         end = datetime(year,12,31)
