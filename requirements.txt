@@ -3,6 +3,7 @@ feedparser
 dateparser
 holidays
 timezonefinder
+sqlalchemy_mate<=2.0.0.0
 uszipcode
 python-Levenshtein
 pyluach
