@@ -182,7 +182,7 @@ class Day:
     def fast_adjust(self) -> timedelta:
         is_fast = self.heb_date.fast_day()
 
-        if is_fast in ('Tzom Gedalia', '10 of Teves','Taanis Esther',  '17 of Tamuz'):
+        if is_fast in ('Tzom Gedalia', '10 of Teves', 'Taanis Esther', '17 of Tamuz'):
             return timedelta(minutes=15)
         if is_fast == '9 of Av':
             return timedelta(minutes=45)
@@ -240,6 +240,7 @@ class Report:
     def __init__(self) -> None:
         self.days: List[Day] = []
         self.have_friday: bool = False
+        self.winter_mincha_in_effect: bool = True
 
 
     def process(self, day: Day) -> None:
@@ -254,7 +255,7 @@ class Report:
                 this_friday_mincha = dateparser.parse(day.mincha).time()
                 earliest_friday_mincha = min(last_friday_mincha, this_friday_mincha) # earliest friday mincha
                 for day_ in self.days[-5:]: # fill in the rest of the week, skipping any that are already set
-                    if (day_.DST or day_.weekday == 'Sun' or civil_holidays.get(day_.date)): # all DST and any sunday like days  ## not day_.mincha and
+                    if (self.winter_mincha_in_effect or day_.DST or day_.weekday == 'Sun' or civil_holidays.get(day_.date)): # all DST and any sunday like days  ## override for winter mincha experiment
                         computed_mincha = datetime.combine(day_.date, earliest_friday_mincha) - day_.fast_adjust() # adjustments for fast days
                         day_.mincha = computed_mincha.time().strftime("%-I:%M %p")
                         day_.mincha_observed = day_.mincha
@@ -265,7 +266,7 @@ class Report:
             day.mincha_observed = day.early_fri_mincha_adjust()
             # do erev yom kippur thing here again in case it's a friday
             day.mincha_observed = day.yom_kippur_adjust()
-            
+
         if day.weekday == 'Sat' and self.have_friday: # 15 minutes before Friday candle lighting rounded to the nearest 5 minutes
             candle_lighting_less_15: datetime = dateparser.parse(self.days[-1].get_candle_lighting()) - timedelta(minutes=15)
             mincha = candle_lighting_less_15 - timedelta(minutes=candle_lighting_less_15.minute % 5)
@@ -372,11 +373,8 @@ def main():
 def debug():
         zipcode = '94303'
 
-        start =  datetime(2024,8,23)
-        end = datetime(2024,9,6)
-
-        # start =  datetime(2024,3,6)
-        # end = datetime(2024,3,11)
+        start =  datetime(2025,11,1)
+        end = datetime(2026,3,8)
 
         filename = f'debug/{zipcode}_davening_times_{start.date()}_to_{end.date()}.csv'
 
