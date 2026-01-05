@@ -77,6 +77,8 @@ def main(zipcode, start, end):
 
             writer.writerow(times)
 
+    return filename
+
 
 
 if __name__ == '__main__':
