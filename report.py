@@ -249,8 +249,8 @@ class Report:
 
             if len(self.days) >= 7:
                 last_friday_mincha = dateparser.parse(self.days[-7].mincha)
-                if not self.days[-7].DST:
-                    last_friday_mincha += timedelta(hours=1)
+                if day.DST != self.days[-7].DST:
+                    last_friday_mincha += timedelta(hours=(day.DST-self.days[-7].DST))
                 last_friday_mincha = last_friday_mincha.time()
                 this_friday_mincha = dateparser.parse(day.mincha).time()
                 earliest_friday_mincha = min(last_friday_mincha, this_friday_mincha) # earliest friday mincha
@@ -282,7 +282,7 @@ class Report:
     def load_csv(self, filename) -> None:
         ''' for loading .csv files made by yeartimes.py '''
         # not currently in use. scrapes fresh every time
-        timezone = self.zip_to_tz(filename[:5])
+        timezone = self.zip_to_tz(filename.split('/')[1][:5])
 
         with open(filename) as csvfile:
             reader = csv.DictReader(csvfile)
@@ -373,13 +373,17 @@ def main():
 def debug():
         zipcode = '94303'
 
-        start =  datetime(2025,11,1)
-        end = datetime(2026,3,8)
+        start =  datetime(2026,1,2)
+        end = datetime(2026,1,10)
 
         filename = f'debug/{zipcode}_davening_times_{start.date()}_to_{end.date()}.csv'
 
+        # import yeartimes
+        # print(f'{yeartimes.main(zipcode, (start.year, start.month, start.day), (end.year, end.month, end.day))=}')
+
         r = Report()
         r.load(zipcode, start, end)
+        # r.load_csv(f'zmanim_data/{zipcode}_zmanim_{start.date()}_to_{end.date()}.csv')
         r.save(filename)
 
 
